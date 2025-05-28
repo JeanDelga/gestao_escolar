@@ -37,3 +37,7 @@ Route::get('aluno-curso', [AlunoCursoController::class, 'index'])->name('aluno_c
 Route::get('aluno-curso/create', [AlunoCursoController::class, 'create'])->name('aluno_curso.create');
 Route::post('aluno-curso', [AlunoCursoController::class, 'store'])->name('aluno_curso.store');
 Route::delete('aluno-curso/{id}', [AlunoCursoController::class, 'destroy'])->name('aluno_curso.destroy');
+
+Route::get('/presencas', [PresencaController::class, 'index'])->name('presencas.index');
+Route::post('/presencas', [PresencaController::class, 'store'])->name('presencas.store');
+Route::get('/presencas/alunos/{cursoId}', [PresencaController::class, 'getAlunos']);
