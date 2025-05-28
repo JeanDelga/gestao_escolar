@@ -14,7 +14,7 @@ return [
     |
     */
 
-    'title' => 'AdminLTE 3',
+    'title' => 'Gestão Escolar',
     'title_prefix' => '',
     'title_postfix' => '',
 
@@ -308,6 +308,7 @@ return [
         'text' => 'Alunos',
         'url'  => 'alunos',
         'icon' => 'fas fa-user-graduate',
+        'can'  => 'admin',
     ],
     [
         'text' => 'Cursos',
@@ -336,10 +337,10 @@ return [
         'can'  => 'admin',
     ],
     [
-    'text' => 'Vínculo Aluno-Curso',
-    'url'  => 'aluno-curso',
-    'icon' => 'fas fa-link',
-    'can'  => 'admin'
+        'text' => 'Vínculo Aluno-Curso',
+        'url'  => 'aluno-curso',
+        'icon' => 'fas fa-link',
+        'can'  => 'admin'
     ],
 
 ],
