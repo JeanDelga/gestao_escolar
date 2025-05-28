@@ -15,20 +15,14 @@ class AlunoController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $data = Aluno::latest()->get();
-            
-            return DataTables::of($data)
-                ->addColumn('action', function ($row) {
-                    $actionBtns = '
+            return DataTables::of(Aluno::latest()->get())
+                ->addColumn('action', function($row) {
+                    return '
                         <a href="' . route("alunos.edit", $row->id) . '" class="btn btn-outline-info btn-sm"><i class="fas fa-pen"></i></a>
-                        
                         <form action="' . route("alunos.destroy", $row->id) . '" method="POST" style="display:inline" onsubmit="return confirm(\'Deseja realmente excluir este registro?\')">
-                            ' . csrf_field() . '
-                            ' . method_field("DELETE") . '
+                            ' . csrf_field() . method_field("DELETE") . '
                             <button type="submit" class="btn btn-outline-danger btn-sm ml-2"><i class="fas fa-trash"></i></button>
-                        </form>
-                    ';
-                    return $actionBtns;
+                        </form>';
                 })
                 ->rawColumns(['action'])
                 ->make(true);
@@ -42,7 +36,8 @@ class AlunoController extends Controller
      */
     public function create()
     {
-        return view('alunos.crud');
+        $action = 'Cadastrar';
+        return view('alunos.crud', compact('action'));
     }
 
     /**
@@ -50,22 +45,23 @@ class AlunoController extends Controller
      */
     public function store(Request $request)
     {
-        $user = Auth::user();      
+        $request->validate([
+            'nome' => 'required|string|max:255',
+            'matricula' => 'required|string|unique:alunos',
+            'data_nascimento' => 'required|date',
+        ]);
 
-        $nome = $request->post('nome');
-        $matricula = $request->post('matricula');
-        $data_nascimento = $request->post('data_nascimento');
+        $user = Auth::user();
 
-        $edit = new Aluno();
+        $aluno = new Aluno();
+        $aluno->nome = $request->post('nome');
+        $aluno->matricula = $request->post('matricula');
+        $aluno->data_nascimento = $request->post('data_nascimento');
+        $aluno->origin_user = $user->name ?? 'admin';
+        $aluno->last_user = $user->name ?? 'admin';
+        $aluno->save();
 
-        $edit->nome = $nome;
-        $edit->matricula = $matricula;
-        $edit->data_nascimento = $data_nascimento;
-        $edit->origin_user = $user->name;
-        $edit->last_user = $user->name;
-        $edit->save();
-
-        return view('alunos.index');
+        return redirect()->route('alunos.index')->with('success', 'Aluno cadastrado com sucesso!');
     }
 
     /**
@@ -73,13 +69,10 @@ class AlunoController extends Controller
      */
     public function edit($id)
     {
-        $edit = Aluno::find($id);
+        $edit = Aluno::findOrFail($id);
+        $action = 'Editar';
 
-        $output = array(
-            'edit' => $edit,
-        );
-
-        return view('alunos.crud', $output);
+        return view('alunos.crud', compact('edit', 'action'));
     }
 
     /**
@@ -87,21 +80,22 @@ class AlunoController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $user = Auth::user();      
+        $request->validate([
+            'nome' => 'required|string|max:255',
+            'matricula' => 'required|string|unique:alunos,matricula,' . $id,
+            'data_nascimento' => 'required|date',
+        ]);
 
-        $nome = $request->post('nome');
-        $matricula = $request->post('matricula');
-        $data_nascimento = $request->post('data_nascimento');
+        $user = Auth::user();
 
-        $edit = Aluno::find($id);
+        $aluno = Aluno::findOrFail($id);
+        $aluno->nome = $request->post('nome');
+        $aluno->matricula = $request->post('matricula');
+        $aluno->data_nascimento = $request->post('data_nascimento');
+        $aluno->last_user = $user->name ?? 'admin';
+        $aluno->save();
 
-        $edit->nome = $nome;
-        $edit->matricula = $matricula;
-        $edit->data_nascimento = $data_nascimento;
-        $edit->last_user = $user->name;
-        $edit->update();
-
-        return view('alunos.index');
+        return redirect()->route('alunos.index')->with('success', 'Aluno atualizado com sucesso!');
     }
 
     /**
@@ -109,9 +103,9 @@ class AlunoController extends Controller
      */
     public function destroy($id)
     {
-        $edit = Aluno::find($id);
-        $edit->delete();
+        $aluno = Aluno::findOrFail($id);
+        $aluno->delete();
 
-        return view('alunos.index');
+        return redirect()->route('alunos.index')->with('success', 'Aluno excluído com sucesso!');
     }
 }

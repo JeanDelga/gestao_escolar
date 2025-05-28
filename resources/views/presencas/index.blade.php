@@ -1,42 +1,44 @@
 @extends('adminlte::page')
 
-@section('title', 'Cadastro de Presenças')
+@section('title', 'Presenças')
 
 @section('content_header')
+    <h1>Presenças</h1>
 @stop
 
 @section('content')
-    <h1>Presenças</h1>
 
-    <a href="{{ route('presencas.create') }}" class="btn btn-primary mb-3">Registrar Presença</a>
+<a href="{{ route('presencas.create') }}" class="btn btn-primary mb-3">Nova Presença</a>
 
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Aluno</th>
-                <th>Curso</th>
-                <th>Data</th>
-                <th>Presente</th>
-                <th>Ações</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($presencas as $presenca)
-                <tr>
-                    <td>{{ $presenca->aluno->nome }}</td>
-                    <td>{{ $presenca->curso->nome }}</td>
-                    <td>{{ $presenca->data }}</td>
-                    <td>{{ $presenca->presente ? 'Sim' : 'Não' }}</td>
-                    <td>
-                        <a href="{{ route('presencas.edit', $presenca) }}" class="btn btn-warning btn-sm">Editar</a>
-                        <form action="{{ route('presencas.destroy', $presenca) }}" method="POST" style="display:inline;">
-                            @csrf
-                            @method('DELETE')
-                            <button class="btn btn-danger btn-sm">Excluir</button>
-                        </form>
-                    </td>
-                </tr>
-            @endforeach
-        </tbody>
-    </table>
-@endsection
+<table id="tabela" class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Aluno</th>
+            <th>Curso</th>
+            <th>Data</th>
+            <th>Presente</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+</table>
+
+@stop
+
+@section('js')
+<script>
+$(document).ready(function() {
+    $('#tabela').DataTable({
+        processing: true,
+        serverSide: true,
+        ajax: "{{ route('presencas.index') }}",
+        columns: [
+            { data: 'aluno_id', name: 'aluno_id' },
+            { data: 'curso_id', name: 'curso_id' },
+            { data: 'data', name: 'data' },
+            { data: 'presente', name: 'presente' },
+            { data: 'action', name: 'action', orderable: false, searchable: false }
+        ]
+    });
+});
+</script>
+@stop

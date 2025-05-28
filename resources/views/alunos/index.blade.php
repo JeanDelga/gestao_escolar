@@ -1,40 +1,52 @@
 @extends('adminlte::page')
 
-@section('title', 'Cadastro de Alunos')
+@section('title', 'Alunos')
 
 @section('content_header')
+    <h1>Alunos</h1>
 @stop
 
 @section('content')
-    <h1>Alunos</h1>
 
-    <a href="{{ route('alunos.create') }}" class="btn btn-primary mb-3">Novo Aluno</a>
+<a href="{{ route('alunos.create') }}" class="btn btn-primary mb-3">Novo Aluno</a>
 
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Nome</th>
-                <th>Matrícula</th>
-                <th>Data de Nascimento</th>
-                <th>Ações</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($alunos as $aluno)
-                <tr>
-                    <td>{{ $aluno->nome }}</td>
-                    <td>{{ $aluno->matricula }}</td>
-                    <td>{{ $aluno->data_nascimento }}</td>
-                    <td>
-                        <a href="{{ route('alunos.edit', $aluno) }}" class="btn btn-warning btn-sm">Editar</a>
-                        <form action="{{ route('alunos.destroy', $aluno) }}" method="POST" style="display:inline;">
-                            @csrf
-                            @method('DELETE')
-                            <button class="btn btn-danger btn-sm">Excluir</button>
-                        </form>
-                    </td>
-                </tr>
-            @endforeach
-        </tbody>
-    </table>
-@endsection
+<table id="tabela" class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Nome</th>
+            <th>Matrícula</th>
+            <th>Data de Nascimento</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+</table>
+
+@stop
+
+@section('js')
+<script>
+$(document).ready(function() {
+    $('#tabela').DataTable({
+        processing: true,
+        serverSide: true,
+        ajax: {
+            url: "{{ route('alunos.index') }}",
+            type: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        },
+        columns: [
+            { data: 'nome', name: 'nome' },
+            { data: 'matricula', name: 'matricula' },
+            { data: 'data_nascimento', name: 'data_nascimento' },
+            { data: 'action', name: 'action', orderable: false, searchable: false }
+        ],
+        language: {
+            url: '//cdn.datatables.net/plug-ins/1.11.3/i18n/pt_br.json'
+        }
+    });
+});
+</script>
+
+@stop
