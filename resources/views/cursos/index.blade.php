@@ -6,6 +6,8 @@
     <h1>Cursos</h1>
 @stop
 
+@section('plugins.Datatables', true)
+
 @section('content')
 
 <a href="{{ route('cursos.create') }}" class="btn btn-primary mb-3">Novo Curso</a>

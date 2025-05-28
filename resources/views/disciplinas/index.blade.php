@@ -6,6 +6,8 @@
     <h1>Disciplinas</h1>
 @stop
 
+@section('plugins.Datatables', true)
+
 @section('content')
 
 <a href="{{ route('disciplinas.create') }}" class="btn btn-primary mb-3">Nova Disciplina</a>

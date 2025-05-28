@@ -6,6 +6,8 @@
     <h1>Notas</h1>
 @stop
 
+@section('plugins.Datatables', true)
+
 @section('content')
 
 <a href="{{ route('notas.create') }}" class="btn btn-primary mb-3">Nova Nota</a>

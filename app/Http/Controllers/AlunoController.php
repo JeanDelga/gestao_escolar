@@ -12,14 +12,20 @@ class AlunoController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            return DataTables::of(Aluno::latest()->get())
+            $data = Aluno::latest()->get();
+
+            return DataTables::of($data)
                 ->addColumn('action', function ($row) {
-                    return '
+                    $actionBtns = '
                         <a href="' . route("alunos.edit", $row->id) . '" class="btn btn-outline-info btn-sm"><i class="fas fa-pen"></i></a>
+
                         <form action="' . route("alunos.destroy", $row->id) . '" method="POST" style="display:inline" onsubmit="return confirm(\'Deseja realmente excluir este registro?\')">
-                            ' . csrf_field() . method_field("DELETE") . '
+                            ' . csrf_field() . '
+                            ' . method_field("DELETE") . '
                             <button type="submit" class="btn btn-outline-danger btn-sm ml-2"><i class="fas fa-trash"></i></button>
-                        </form>';
+                        </form>
+                    ';
+                    return $actionBtns;
                 })
                 ->rawColumns(['action'])
                 ->make(true);
@@ -28,9 +34,11 @@ class AlunoController extends Controller
         return view('alunos.index');
     }
 
+
     public function create()
     {
-        $action = 'Cadastrar';
+        $action = 'Criar';
+        $edit = new Aluno();
         return view('alunos.crud', compact('action'));
     }
 

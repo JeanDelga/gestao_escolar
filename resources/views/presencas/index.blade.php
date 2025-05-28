@@ -6,6 +6,8 @@
     <h1>Presenças</h1>
 @stop
 
+@section('plugins.Datatables', true)
+
 @section('content')
 
 <a href="{{ route('presencas.create') }}" class="btn btn-primary mb-3">Nova Presença</a>

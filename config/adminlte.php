@@ -333,7 +333,7 @@ return [
         'text' => 'Usuários',
         'url'  => 'usuarios',
         'icon' => 'fas fa-users-cog',
-        'can'  => 'admin', // protege para admin apenas, se usar policies
+        'can'  => 'admin',
     ],
 ],
 

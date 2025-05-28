@@ -6,6 +6,8 @@
     <h1>Usuários</h1>
 @stop
 
+@section('plugins.Datatables', true)
+
 @section('content')
 
 <a href="{{ route('usuarios.create') }}" class="btn btn-primary mb-3">Novo Usuário</a>

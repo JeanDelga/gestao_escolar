@@ -13,10 +13,6 @@ class Aluno extends Model
     protected $table = 'alunos';
     protected $guarded = ['id'];
 
-    public function cursos()
-    {
-        return $this->belongsToMany(Curso::class, 'aluno_curso');
-    }
     public function notas()
     {
         return $this->hasMany(Nota::class);
@@ -25,8 +21,12 @@ class Aluno extends Model
     {
         return $this->hasMany(Presenca::class);
     }
+    public function cursos()
+    {
+        return $this->belongsToMany(Curso::class, 'aluno_curso');
+    }
     public function disciplinas()
     {
-        return $this->belongsToMany(Disciplina::class, 'notas')->withPivot('valor');
+        return $this->belongsToMany(Disciplina::class, 'aluno_disciplina');
     }
 }
