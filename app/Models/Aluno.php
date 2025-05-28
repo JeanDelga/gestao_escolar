@@ -29,4 +29,5 @@ class Aluno extends Model
     {
         return $this->belongsToMany(Disciplina::class, 'aluno_disciplina');
     }
+    
 }

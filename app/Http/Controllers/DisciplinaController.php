@@ -1,79 +1,65 @@
 <?php
 
+
 namespace App\Http\Controllers;
 
 use App\Models\Disciplina;
-use App\Models\Curso;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Gate;
+use Yajra\DataTables\Facades\DataTables;
 
 class DisciplinaController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $disciplinas = Disciplina::whereHas('curso', function ($query) {
-            $query->where('professor_id', auth()->id());
-        })->get();
-
-        return view('disciplinas.index', compact('disciplinas'));
+        if ($request->ajax()) {
+            $data = Disciplina::with('curso')->get();
+            return DataTables::of($data)
+                ->addColumn('curso', function ($row) {
+                    return $row->curso->nome ?? 'Sem curso';
+                })
+                ->addColumn('action', function ($row) {
+                    return '
+                        <a href="'.route("disciplinas.edit", $row->id).'" class="btn btn-info btn-sm">Editar</a>
+                        <form action="'.route("disciplinas.destroy", $row->id).'" method="POST" style="display:inline;">
+                            '.csrf_field().method_field('DELETE').'
+                            <button type="submit" class="btn btn-danger btn-sm">Excluir</button>
+                        </form>
+                    ';
+                })
+                ->rawColumns(['action'])
+                ->make(true);
+        }
+        return view('disciplinas.index');
     }
 
     public function create()
     {
-        $action = 'Criar';
-        $disciplina = null;
-
-        $cursos = Curso::where('professor_id', auth()->id())->get();
-
-        return view('disciplinas.crud', compact('action', 'disciplina', 'cursos'));
+        return view('disciplinas.crud');
     }
 
     public function store(Request $request)
     {
-        $disciplina = new Disciplina();
-        $disciplina->nome = $request->nome;
-        $disciplina->descricao = $request->descricao;
-        $disciplina->curso_id = $request->curso_id;
-        $disciplina->save();
-
+        $request->validate(['nome' => 'required', 'curso_id' => 'required']);
+        Disciplina::create($request->all());
         return redirect()->route('disciplinas.index')->with('success', 'Disciplina criada com sucesso!');
     }
 
-    public function edit(Disciplina $disciplina)
+    public function edit($id)
     {
-        if (Gate::denies('manage-discipline', $disciplina)) {
-            abort(403);
-        }
-
-        $action = 'Editar';
-
-        $cursos = Curso::where('professor_id', auth()->id())->get();
-
-        return view('disciplinas.crud', compact('action', 'disciplina', 'cursos'));
+        $disciplina = Disciplina::findOrFail($id);
+        return view('disciplinas.crud', compact('disciplina'));
     }
 
-    public function update(Request $request, Disciplina $disciplina)
+    public function update(Request $request, $id)
     {
-        if (Gate::denies('manage-discipline', $disciplina)) {
-            abort(403);
-        }
-
-        $disciplina->nome = $request->nome;
-        $disciplina->descricao = $request->descricao;
-        $disciplina->curso_id = $request->curso_id;
-        $disciplina->save();
-
+        $disciplina = Disciplina::findOrFail($id);
+        $disciplina->update($request->all());
         return redirect()->route('disciplinas.index')->with('success', 'Disciplina atualizada com sucesso!');
     }
 
-    public function destroy(Disciplina $disciplina)
+    public function destroy($id)
     {
-        if (Gate::denies('manage-discipline', $disciplina)) {
-            abort(403);
-        }
-
-        $disciplina->delete();
-
+        Disciplina::destroy($id);
         return redirect()->route('disciplinas.index')->with('success', 'Disciplina excluída com sucesso!');
     }
 }

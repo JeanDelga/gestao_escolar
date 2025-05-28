@@ -1,14 +1,17 @@
 @extends('adminlte::page')
 
-@section('title', 'Vínculos Aluno-Curso')
+@section('title', 'Alunos e Cursos')
 
 @section('content_header')
-    <h1>Vínculos Aluno-Curso</h1>
+    <h1>Alunos e Cursos</h1>
 @stop
 
 @section('content')
+
     @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
+        <div class="alert alert-success">
+            {{ session('success') }}
+        </div>
     @endif
 
     <a href="{{ route('aluno_curso.create') }}" class="btn btn-primary mb-3">Novo Vínculo</a>
@@ -17,21 +20,27 @@
         <thead>
             <tr>
                 <th>Aluno</th>
-                <th>Curso</th>
+                <th>Cursos</th>
                 <th>Ações</th>
             </tr>
         </thead>
         <tbody>
-            @foreach($vinculos as $vinculo)
+            @foreach($alunos as $aluno)
                 <tr>
-                    <td>{{ $vinculo->aluno_nome }}</td>
-                    <td>{{ $vinculo->curso_nome }}</td>
+                    <td>{{ $aluno->nome }}</td>
                     <td>
-                        <form action="{{ route('aluno_curso.destroy', $vinculo->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Deseja remover este vínculo?');">
-                            @csrf
-                            @method('DELETE')
-                            <button class="btn btn-danger btn-sm">Remover</button>
-                        </form>
+                        @foreach($aluno->cursos as $curso)
+                            <span class="badge badge-info">{{ $curso->nome }}</span>
+                        @endforeach
+                    </td>
+                    <td>
+                        @foreach($aluno->cursos as $curso)
+                            <form action="{{ route('aluno_curso.destroy', $curso->pivot->id) }}" method="POST" style="display:inline;">
+                                @csrf
+                                @method('DELETE')
+                                <button class="btn btn-danger btn-sm">Remover</button>
+                            </form>
+                        @endforeach
                     </td>
                 </tr>
             @endforeach

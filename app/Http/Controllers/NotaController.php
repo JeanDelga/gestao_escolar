@@ -2,48 +2,38 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Nota;
-use App\Models\Aluno;
+use Illuminate\Http\Request;
 use App\Models\Curso;
 use App\Models\Disciplina;
-use Illuminate\Http\Request;
-use Illuminate\Routing\Controller;
+use App\Models\Aluno;
+use App\Models\Nota;
 
 class NotaController extends Controller
 {
-    // Formulário de lançamento de notas
     public function index()
     {
-        $cursos = Curso::where('professor_id', auth()->id())->get();
-        return view('notas.index', compact('cursos'));
+        return view('notas.index');
     }
 
-    // Salva as notas em lote
-    public function salvar(Request $request)
+    public function create()
     {
-        foreach($request->notas as $aluno_id => $valor) {
-            Nota::updateOrCreate(
-                [
-                    'aluno_id' => $aluno_id,
-                    'disciplina_id' => $request->disciplina_id
-                ],
-                [
-                    'nota' => $valor
-                ]
-            );
+        $cursos = Curso::all();
+        return view('notas.crud', compact('cursos'));
+    }
+
+    public function store(Request $request)
+    {
+        $disciplinaId = $request->disciplina;
+
+        foreach($request->notas as $alunoId => $notaValor) {
+            Nota::create([
+                'aluno_id' => $alunoId,
+                'disciplina_id' => $disciplinaId,
+                'valor' => $notaValor
+            ]);
         }
 
-        return redirect()->back()->with('success', 'Notas lançadas com sucesso!');
-    }
-
-    // Retorna disciplinas do curso via JSON
-    public function getAlunos($cursoId)
-    {
-        $alunos = Aluno::whereHas('cursos', function($query) use ($cursoId) {
-            $query->where('curso_id', $cursoId);
-        })->get();
-
-        return response()->json($alunos);
+        return redirect()->route('notas.index')->with('success', 'Notas lançadas com sucesso!');
     }
 
     public function getDisciplinas($cursoId)
@@ -52,4 +42,12 @@ class NotaController extends Controller
         return response()->json($disciplinas);
     }
 
+    public function getAlunos($cursoId)
+    {
+        $alunos = Aluno::whereHas('cursos', function($query) use ($cursoId) {
+            $query->where('curso_id', $cursoId);
+        })->get();
+
+        return response()->json($alunos);
+    }
 }

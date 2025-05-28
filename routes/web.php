@@ -12,7 +12,6 @@ use App\Http\Controllers\AlunoCursoController;
 use App\Http\Controllers\DisciplinaController;
 
 
-
 Route::get('/', function () {
     return view('welcome');
 });
@@ -34,7 +33,7 @@ Route::post('notas/salvar', [NotaController::class, 'salvar'])->name('notas.salv
 Route::get('notas/disciplinas/{curso}', [NotaController::class, 'getDisciplinas']);
 Route::get('notas/alunos/{curso}', [NotaController::class, 'getAlunos']);
 
-Route::get('aluno-curso', [AlunoCursoController::class, 'index'])->name('aluno_curso.index');
+oute::get('aluno-curso', [AlunoCursoController::class, 'index'])->name('aluno_curso.index');
 Route::get('aluno-curso/create', [AlunoCursoController::class, 'create'])->name('aluno_curso.create');
 Route::post('aluno-curso', [AlunoCursoController::class, 'store'])->name('aluno_curso.store');
 Route::delete('aluno-curso/{id}', [AlunoCursoController::class, 'destroy'])->name('aluno_curso.destroy');
