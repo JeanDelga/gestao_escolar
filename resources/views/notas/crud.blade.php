@@ -48,6 +48,8 @@
                     </option>
                 @endforeach
             </select>
+        <div id="alunos-container"></div>
+
         </div>
 
         <div class="form-group">

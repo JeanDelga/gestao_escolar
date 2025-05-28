@@ -1,36 +1,40 @@
 @extends('adminlte::page')
 
-@section('title', 'Cadastro de Disciplinas')
+@section('title', '{{ $action }} Disciplina')
 
 @section('content_header')
+    <h1>{{ $action }} Disciplina</h1>
 @stop
 
 @section('content')
-    <h1>{{ $action }} Disciplina</h1>
-
-    <form action="{{ $action == 'Editar' ? route('disciplinas.update', $disciplina) : route('disciplinas.store') }}" method="POST">
+    <form action="{{ $action == 'Editar' ? route('disciplinas.update', $disciplina->id) : route('disciplinas.store') }}" method="POST">
         @csrf
+
         @if($action == 'Editar')
             @method('PUT')
         @endif
 
         <div class="form-group">
-            <label>Nome</label>
-            <input type="text" name="nome" value="{{ $disciplina->nome ?? old('nome') }}" class="form-control">
+            <label for="nome">Nome da Disciplina</label>
+            <input type="text" name="nome" class="form-control" value="{{ $disciplina->nome ?? '' }}" required>
         </div>
 
         <div class="form-group">
-            <label>Curso</label>
-            <select name="curso_id" class="form-control">
+            <label for="descricao">Descrição</label>
+            <textarea name="descricao" class="form-control" required>{{ $disciplina->descricao ?? '' }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="curso_id">Curso</label>
+            <select name="curso_id" class="form-control" required>
                 @foreach($cursos as $curso)
-                    <option value="{{ $curso->id }}" 
-                        @if(isset($disciplina) && $disciplina->curso_id == $curso->id) selected @endif>
+                    <option value="{{ $curso->id }}" @if(isset($disciplina) && $disciplina->curso_id == $curso->id) selected @endif>
                         {{ $curso->nome }}
                     </option>
                 @endforeach
             </select>
         </div>
 
-        <button class="btn btn-success mt-2">Salvar</button>
+        <button type="submit" class="btn btn-primary">{{ $action }}</button>
     </form>
-@endsection
+@stop

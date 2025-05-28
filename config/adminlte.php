@@ -335,6 +335,13 @@ return [
         'icon' => 'fas fa-users-cog',
         'can'  => 'admin',
     ],
+    [
+    'text' => 'Vínculo Aluno-Curso',
+    'url'  => 'aluno-curso',
+    'icon' => 'fas fa-link',
+    'can'  => 'admin'
+    ],
+
 ],
 
 

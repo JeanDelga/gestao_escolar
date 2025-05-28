@@ -3,77 +3,79 @@
 namespace App\Http\Controllers;
 
 use App\Models\Curso;
-use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\Facades\DataTables;
 
 class CursoController extends Controller
 {
     public function index(Request $request)
-    {
-        if ($request->ajax()) {
+{
+    if ($request->ajax()) {
+
+        if (auth()->user()->role == 'admin') {
+            // Admin vê todos
             $data = Curso::latest()->get();
-            return DataTables::of($data)
-                ->addColumn('action', function ($row) {
-                    return '
-                        <a href="' . route("cursos.edit", $row->id) . '" class="btn btn-outline-info btn-sm"><i class="fas fa-pen"></i></a>
-                        <form action="' . route("cursos.destroy", $row->id) . '" method="POST" style="display:inline" onsubmit="return confirm(\'Deseja realmente excluir este registro?\')">
-                            ' . csrf_field() . method_field("DELETE") . '
-                            <button type="submit" class="btn btn-outline-danger btn-sm ml-2"><i class="fas fa-trash"></i></button>
-                        </form>';
-                })
-                ->rawColumns(['action'])
-                ->make(true);
+        } else {
+            // Professores veem só os deles
+            $data = Curso::where('professor_id', auth()->id())->latest()->get();
         }
 
-        return view('cursos.index');
+        return DataTables::of($data)
+            ->addColumn('action', function($row){
+                $actionBtns = '
+                    <a href="'.route("cursos.edit", $row->id).'" class="btn btn-outline-info btn-sm"><i class="fas fa-pen"></i></a>
+                    <form action="'.route("cursos.destroy", $row->id).'" method="POST" style="display:inline" onsubmit="return confirm(\'Deseja excluir?\')">
+                        '.csrf_field().'
+                        '.method_field("DELETE").'
+                        <button type="submit" class="btn btn-outline-danger btn-sm ml-2"><i class="fas fa-trash"></i></button>
+                    </form>
+                ';
+                return $actionBtns;
+            })
+            ->rawColumns(['action'])
+            ->make(true);
     }
+
+    return view('cursos.index');
+}
+
 
     public function create()
     {
-        $action = 'Criar';
-        $professores = User::where('role', 'professor')->get();
-        return view('cursos.crud', compact('action', 'professores'));
+        return view('cursos.crud', ['action' => 'Cadastrar', 'curso' => new Curso()]);
     }
 
     public function store(Request $request)
     {
-        $user = Auth::user();
-        $edit = new Curso();
-        $edit->nome = $request->post('nome');
-        $edit->carga_horaria = $request->post('carga_horaria');
-        $edit->professor_id = $request->post('professor_id');
-        $edit->save();
+        $curso = new Curso();
+        $curso->nome = $request->nome;
+        $curso->descricao = $request->descricao;
+        $curso->carga_horaria = $request->carga_horaria;
+        $curso->professor_id = auth()->id();
+        $curso->save();
 
-        return view('cursos.index');
+        return redirect()->route('cursos.index')->with('success', 'Curso criado com sucesso!');
     }
 
-    public function edit($id)
+    public function edit(Curso $curso)
     {
-        $edit = Curso::find($id);
-        $action = 'Editar';
-        $professores = User::where('role', 'professor')->get();
-        return view('cursos.crud', compact('edit', 'action', 'professores'));
+        return view('cursos.crud', ['action' => 'Editar', 'curso' => $curso]);
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, Curso $curso)
     {
-        $user = Auth::user();
-        $edit = Curso::find($id);
-        $edit->nome = $request->post('nome');
-        $edit->carga_horaria = $request->post('carga_horaria');
-        $edit->professor_id = $request->post('professor_id');
-        $edit->update();
+        $curso->nome = $request->nome;
+        $curso->descricao = $request->descricao;
+        $curso->carga_horaria = $request->carga_horaria;
+        $curso->save();
 
-        return view('cursos.index');
+        return redirect()->route('cursos.index')->with('success', 'Curso atualizado com sucesso!');
     }
 
-    public function destroy($id)
+    public function destroy(Curso $curso)
     {
-        $edit = Curso::find($id);
-        $edit->delete();
+        $curso->delete();
 
-        return view('cursos.index');
+        return redirect()->route('cursos.index')->with('success', 'Curso excluído com sucesso!');
     }
 }

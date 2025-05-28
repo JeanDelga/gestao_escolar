@@ -7,81 +7,49 @@ use App\Models\Aluno;
 use App\Models\Curso;
 use App\Models\Disciplina;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Yajra\DataTables\Facades\DataTables;
+use Illuminate\Routing\Controller;
 
 class NotaController extends Controller
 {
-    public function index(Request $request)
+    // Formulário de lançamento de notas
+    public function index()
     {
-        if ($request->ajax()) {
-            $data = Nota::latest()->get();
-            return DataTables::of($data)
-                ->addColumn('action', function ($row) {
-                    return '
-                        <a href="' . route("notas.edit", $row->id) . '" class="btn btn-outline-info btn-sm"><i class="fas fa-pen"></i></a>
-                        <form action="' . route("notas.destroy", $row->id) . '" method="POST" style="display:inline" onsubmit="return confirm(\'Deseja realmente excluir este registro?\')">
-                            ' . csrf_field() . method_field("DELETE") . '
-                            <button type="submit" class="btn btn-outline-danger btn-sm ml-2"><i class="fas fa-trash"></i></button>
-                        </form>';
-                })
-                ->rawColumns(['action'])
-                ->make(true);
+        $cursos = Curso::where('professor_id', auth()->id())->get();
+        return view('notas.index', compact('cursos'));
+    }
+
+    // Salva as notas em lote
+    public function salvar(Request $request)
+    {
+        foreach($request->notas as $aluno_id => $valor) {
+            Nota::updateOrCreate(
+                [
+                    'aluno_id' => $aluno_id,
+                    'disciplina_id' => $request->disciplina_id
+                ],
+                [
+                    'nota' => $valor
+                ]
+            );
         }
 
-        return view('notas.index');
+        return redirect()->back()->with('success', 'Notas lançadas com sucesso!');
     }
 
-    public function create()
+    // Retorna disciplinas do curso via JSON
+    public function getAlunos($cursoId)
     {
-        $action = 'Criar';
-        $alunos = Aluno::all();
-        $cursos = Curso::all();
-        $disciplinas = Disciplina::all();
-        return view('notas.crud', compact('action', 'alunos', 'cursos', 'disciplinas'));
+        $alunos = Aluno::whereHas('cursos', function($query) use ($cursoId) {
+            $query->where('curso_id', $cursoId);
+        })->get();
+
+        return response()->json($alunos);
     }
 
-    public function store(Request $request)
+    public function getDisciplinas($cursoId)
     {
-        $user = Auth::user();
-        $edit = new Nota();
-        $edit->aluno_id = $request->post('aluno_id');
-        $edit->curso_id = $request->post('curso_id');
-        $edit->disciplina_id = $request->post('disciplina_id');
-        $edit->valor = $request->post('valor');
-        $edit->save();
-
-        return view('notas.index');
+        $disciplinas = Disciplina::where('curso_id', $cursoId)->get();
+        return response()->json($disciplinas);
     }
 
-    public function edit($id)
-    {
-        $edit = Nota::find($id);
-        $action = 'Editar';
-        $alunos = Aluno::all();
-        $cursos = Curso::all();
-        $disciplinas = Disciplina::all();
-        return view('notas.crud', compact('edit', 'action', 'alunos', 'cursos', 'disciplinas'));
-    }
-
-    public function update(Request $request, $id)
-    {
-        $user = Auth::user();
-        $edit = Nota::find($id);
-        $edit->aluno_id = $request->post('aluno_id');
-        $edit->curso_id = $request->post('curso_id');
-        $edit->disciplina_id = $request->post('disciplina_id');
-        $edit->valor = $request->post('valor');
-        $edit->update();
-
-        return view('notas.index');
-    }
-
-    public function destroy($id)
-    {
-        $edit = Nota::find($id);
-        $edit->delete();
-
-        return view('notas.index');
-    }
 }

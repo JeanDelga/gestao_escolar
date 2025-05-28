@@ -15,6 +15,10 @@ class Disciplina extends Model
     {
         return $this->belongsToMany(Curso::class, 'curso_disciplina');
     }
+    public function curso()
+    {
+        return $this->belongsTo(Curso::class);
+    }
 
     public function alunos()
     {

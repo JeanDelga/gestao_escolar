@@ -20,4 +20,8 @@ class Curso extends Model
     {
         return $this->hasMany(Disciplina::class);
     }
+    public function professor()
+    {
+        return $this->belongsTo(User::class, 'professor_id');
+    }
 }
