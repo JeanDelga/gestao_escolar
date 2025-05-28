@@ -5,62 +5,118 @@ namespace App\Http\Controllers;
 use App\Models\Curso;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Yajra\DataTables\Facades\DataTables;
 
 class CursoController extends Controller
 {
-    public function index()
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(Request $request)
     {
-        $cursos = Curso::all();
-        return view('cursos.index', compact('cursos'));
+        if ($request->ajax()) {
+            $data = Curso::latest()->get();
+            
+            return DataTables::of($data)
+                ->addColumn('action', function ($row) {
+                    $actionBtns = '
+                        <a href="' . route("cursos.edit", $row->id) . '" class="btn btn-outline-info btn-sm"><i class="fas fa-pen"></i></a>
+                        
+                        <form action="' . route("cursos.destroy", $row->id) . '" method="POST" style="display:inline" onsubmit="return confirm(\'Deseja realmente excluir este registro?\')">
+                            ' . csrf_field() . '
+                            ' . method_field("DELETE") . '
+                            <button type="submit" class="btn btn-outline-danger btn-sm ml-2"><i class="fas fa-trash"></i></button>
+                        </form>
+                    ';
+                    return $actionBtns;
+                })
+                ->rawColumns(['action'])
+                ->make(true);
+        }
+
+        return view('cursos.index');
     }
 
+    /**
+     * Show the form for creating a new resource.
+     */
     public function create()
     {
         $professores = User::where('role', 'professor')->get();
-        return view('cursos.create', compact('professores'));
+
+        return view('cursos.crud', compact('professores'));
     }
 
+    /**
+     * Store a newly created resource in storage.
+     */
     public function store(Request $request)
     {
-        $request->validate([
-            'nome' => 'required|string',
-            'carga_horaria' => 'required|integer',
-            'professor_id' => 'required|exists:users,id',
-        ]);
+        $user = Auth::user();      
 
-        Curso::create($request->all());
+        $nome = $request->post('nome');
+        $carga_horaria = $request->post('carga_horaria');
+        $professor_id = $request->post('professor_id');
 
-        return redirect()->route('cursos.index')->with('success', 'Curso criado com sucesso!');
+        $edit = new Curso();
+
+        $edit->nome = $nome;
+        $edit->carga_horaria = $carga_horaria;
+        $edit->professor_id = $professor_id;
+        $edit->origin_user = $user->name;
+        $edit->last_user = $user->name;
+        $edit->save();
+
+        return view('cursos.index');
     }
 
-    public function show(Curso $curso)
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit($id)
     {
-        return view('cursos.show', compact('curso'));
-    }
-
-    public function edit(Curso $curso)
-    {
+        $edit = Curso::find($id);
         $professores = User::where('role', 'professor')->get();
-        return view('cursos.edit', compact('curso', 'professores'));
+
+        $output = array(
+            'edit' => $edit,
+            'professores' => $professores
+        );
+
+        return view('cursos.crud', $output);
     }
 
-    public function update(Request $request, Curso $curso)
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, $id)
     {
-        $request->validate([
-            'nome' => 'required|string',
-            'carga_horaria' => 'required|integer',
-            'professor_id' => 'required|exists:users,id',
-        ]);
+        $user = Auth::user();      
 
-        $curso->update($request->all());
+        $nome = $request->post('nome');
+        $carga_horaria = $request->post('carga_horaria');
+        $professor_id = $request->post('professor_id');
 
-        return redirect()->route('cursos.index')->with('success', 'Curso atualizado com sucesso!');
+        $edit = Curso::find($id);
+
+        $edit->nome = $nome;
+        $edit->carga_horaria = $carga_horaria;
+        $edit->professor_id = $professor_id;
+        $edit->last_user = $user->name;
+        $edit->update();
+
+        return view('cursos.index');
     }
 
-    public function destroy(Curso $curso)
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy($id)
     {
-        $curso->delete();
+        $edit = Curso::find($id);
+        $edit->delete();
 
-        return redirect()->route('cursos.index')->with('success', 'Curso excluído com sucesso!');
+        return view('cursos.index');
     }
 }

@@ -4,67 +4,123 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Yajra\DataTables\Facades\DataTables;
 
 class UserController extends Controller
 {
-    public function index()
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(Request $request)
     {
-        $usuarios = User::all();
-        return view('usuarios.index', compact('usuarios'));
+        if ($request->ajax()) {
+            $data = User::latest()->get();
+            
+            return DataTables::of($data)
+                ->addColumn('action', function ($row) {
+                    $actionBtns = '
+                        <a href="' . route("usuarios.edit", $row->id) . '" class="btn btn-outline-info btn-sm"><i class="fas fa-pen"></i></a>
+                        
+                        <form action="' . route("usuarios.destroy", $row->id) . '" method="POST" style="display:inline" onsubmit="return confirm(\'Deseja realmente excluir este registro?\')">
+                            ' . csrf_field() . '
+                            ' . method_field("DELETE") . '
+                            <button type="submit" class="btn btn-outline-danger btn-sm ml-2"><i class="fas fa-trash"></i></button>
+                        </form>
+                    ';
+                    return $actionBtns;
+                })
+                ->rawColumns(['action'])
+                ->make(true);
+        }
+
+        return view('usuarios.index');
     }
 
+    /**
+     * Show the form for creating a new resource.
+     */
     public function create()
     {
-        return view('usuarios.create');
+        return view('usuarios.crud');
     }
 
+    /**
+     * Store a newly created resource in storage.
+     */
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string',
-            'email' => 'required|email|unique:users',
-            'role' => 'required|in:admin,professor',
-            'password' => 'required|min:6|confirmed',
-        ]);
+        $user = Auth::user();      
 
-        User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'role' => $request->role,
-            'password' => Hash::make($request->password),
-        ]);
+        $name = $request->post('name');
+        $email = $request->post('email');
+        $role = $request->post('role');
+        $password = $request->post('password');
 
-        return redirect()->route('usuarios.index')->with('success', 'Usuário criado com sucesso!');
+        $edit = new User();
+
+        $edit->name = $name;
+        $edit->email = $email;
+        $edit->role = $role;
+        $edit->password = Hash::make($password);
+        $edit->origin_user = $user->name;
+        $edit->last_user = $user->name;
+        $edit->save();
+
+        return view('usuarios.index');
     }
 
-    public function show(User $usuario)
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit($id)
     {
-        return view('usuarios.show', compact('usuario'));
+        $edit = User::find($id);
+
+        $output = array(
+            'edit' => $edit
+        );
+
+        return view('usuarios.crud', $output);
     }
 
-    public function edit(User $usuario)
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, $id)
     {
-        return view('usuarios.edit', compact('usuario'));
+        $user = Auth::user();      
+
+        $name = $request->post('name');
+        $email = $request->post('email');
+        $role = $request->post('role');
+
+        $edit = User::find($id);
+
+        $edit->name = $name;
+        $edit->email = $email;
+        $edit->role = $role;
+        $edit->last_user = $user->name;
+
+        // Atualiza a senha se foi enviada
+        if ($request->filled('password')) {
+            $edit->password = Hash::make($request->post('password'));
+        }
+
+        $edit->update();
+
+        return view('usuarios.index');
     }
 
-    public function update(Request $request, User $usuario)
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy($id)
     {
-        $request->validate([
-            'name' => 'required|string',
-            'email' => 'required|email|unique:users,email,' . $usuario->id,
-            'role' => 'required|in:admin,professor',
-        ]);
+        $edit = User::find($id);
+        $edit->delete();
 
-        $usuario->update($request->only('name', 'email', 'role'));
-
-        return redirect()->route('usuarios.index')->with('success', 'Usuário atualizado com sucesso!');
-    }
-
-    public function destroy(User $usuario)
-    {
-        $usuario->delete();
-
-        return redirect()->route('usuarios.index')->with('success', 'Usuário excluído com sucesso!');
+        return view('usuarios.index');
     }
 }

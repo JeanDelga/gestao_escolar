@@ -5,60 +5,114 @@ namespace App\Http\Controllers;
 use App\Models\Disciplina;
 use App\Models\Curso;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Yajra\DataTables\Facades\DataTables;
 
 class DisciplinaController extends Controller
 {
-    public function index()
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(Request $request)
     {
-        $disciplinas = Disciplina::all();
-        return view('disciplinas.index', compact('disciplinas'));
+        if ($request->ajax()) {
+            $data = Disciplina::latest()->get();
+            
+            return DataTables::of($data)
+                ->addColumn('action', function ($row) {
+                    $actionBtns = '
+                        <a href="' . route("disciplinas.edit", $row->id) . '" class="btn btn-outline-info btn-sm"><i class="fas fa-pen"></i></a>
+                        
+                        <form action="' . route("disciplinas.destroy", $row->id) . '" method="POST" style="display:inline" onsubmit="return confirm(\'Deseja realmente excluir este registro?\')">
+                            ' . csrf_field() . '
+                            ' . method_field("DELETE") . '
+                            <button type="submit" class="btn btn-outline-danger btn-sm ml-2"><i class="fas fa-trash"></i></button>
+                        </form>
+                    ';
+                    return $actionBtns;
+                })
+                ->rawColumns(['action'])
+                ->make(true);
+        }
+
+        return view('disciplinas.index');
     }
 
+    /**
+     * Show the form for creating a new resource.
+     */
     public function create()
     {
         $cursos = Curso::all();
-        return view('disciplinas.create', compact('cursos'));
+
+        return view('disciplinas.crud', compact('cursos'));
     }
 
+    /**
+     * Store a newly created resource in storage.
+     */
     public function store(Request $request)
     {
-        $request->validate([
-            'nome' => 'required|string',
-            'curso_id' => 'required|exists:cursos,id',
-        ]);
+        $user = Auth::user();      
 
-        Disciplina::create($request->all());
+        $nome = $request->post('nome');
+        $curso_id = $request->post('curso_id');
 
-        return redirect()->route('disciplinas.index')->with('success', 'Disciplina criada com sucesso!');
+        $edit = new Disciplina();
+
+        $edit->nome = $nome;
+        $edit->curso_id = $curso_id;
+        $edit->origin_user = $user->name;
+        $edit->last_user = $user->name;
+        $edit->save();
+
+        return view('disciplinas.index');
     }
 
-    public function show(Disciplina $disciplina)
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit($id)
     {
-        return view('disciplinas.show', compact('disciplina'));
-    }
-
-    public function edit(Disciplina $disciplina)
-    {
+        $edit = Disciplina::find($id);
         $cursos = Curso::all();
-        return view('disciplinas.edit', compact('disciplina', 'cursos'));
+
+        $output = array(
+            'edit' => $edit,
+            'cursos' => $cursos
+        );
+
+        return view('disciplinas.crud', $output);
     }
 
-    public function update(Request $request, Disciplina $disciplina)
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, $id)
     {
-        $request->validate([
-            'nome' => 'required|string',
-            'curso_id' => 'required|exists:cursos,id',
-        ]);
+        $user = Auth::user();      
 
-        $disciplina->update($request->all());
+        $nome = $request->post('nome');
+        $curso_id = $request->post('curso_id');
 
-        return redirect()->route('disciplinas.index')->with('success', 'Disciplina atualizada com sucesso!');
+        $edit = Disciplina::find($id);
+
+        $edit->nome = $nome;
+        $edit->curso_id = $curso_id;
+        $edit->last_user = $user->name;
+        $edit->update();
+
+        return view('disciplinas.index');
     }
 
-    public function destroy(Disciplina $disciplina)
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy($id)
     {
-        $disciplina->delete();
+        $edit = Disciplina::find($id);
+        $edit->delete();
 
-        return redirect()->route('disciplinas.index')->with('success', 'Disciplina excluída com sucesso!');
+        return view('disciplinas.index');
     }
 }
