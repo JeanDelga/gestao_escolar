@@ -7,6 +7,7 @@ use App\Models\Curso;
 use App\Models\AlunoCurso;
 use Illuminate\Http\Request;
 
+
 class AlunoCursoController extends Controller
 {
     public function index()

@@ -7,29 +7,38 @@
 @stop
 
 @section('content')
-    <form method="POST" action="{{ route('notas.store') }}">
+    <form action="{{ route('notas.store') }}" method="POST">
         @csrf
 
         <div class="form-group">
             <label for="curso">Curso</label>
-            <select id="curso" name="curso" class="form-control">
-                <option value="">Selecione</option>
+            <select name="curso" id="curso" class="form-control" required>
+                <option value="">Selecione um curso</option>
                 @foreach($cursos as $curso)
-                    <option value="{{ $curso->id }}">{{ $curso->nome }}</option>
+                    <option value="{{ $curso->id }}" {{ old('curso') == $curso->id ? 'selected' : '' }}>{{ $curso->nome }}</option>
                 @endforeach
             </select>
         </div>
 
         <div class="form-group">
             <label for="disciplina">Disciplina</label>
-            <select id="disciplina" name="disciplina" class="form-control">
-                <option value="">Selecione um curso primeiro</option>
+            <select name="disciplina" id="disciplina" class="form-control" required>
+                <option value="">Selecione uma disciplina</option>
+                {{-- opções serão carregadas via JS --}}
             </select>
         </div>
 
-        <div id="alunos-container" class="mt-4">
-            <!-- Os campos de notas aparecerão aqui -->
-        </div>
+        <table class="table table-bordered mt-4" id="tabela-notas">
+            <thead>
+                <tr>
+                    <th>Aluno</th>
+                    <th>Nota</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{-- linhas serão carregadas via JS --}}
+            </tbody>
+        </table>
 
         <button type="submit" class="btn btn-primary mt-3">Salvar Notas</button>
     </form>
@@ -37,42 +46,47 @@
 
 @section('js')
 <script>
-    $('#curso').on('change', function() {
-        let cursoId = $(this).val();
+    document.getElementById('curso').addEventListener('change', function () {
+        const cursoId = this.value;
+        const disciplinaSelect = document.getElementById('disciplina');
+        const tabelaBody = document.querySelector('#tabela-notas tbody');
 
-        if (cursoId) {
-            // Carregar Disciplinas
-            $.get('/notas/disciplinas/' + cursoId, function(disciplinas) {
-                let disciplinaSelect = $('#disciplina');
-                disciplinaSelect.empty();
-                disciplinaSelect.append('<option value="">Selecione</option>');
-                $.each(disciplinas, function(index, disciplina) {
-                    disciplinaSelect.append('<option value="' + disciplina.id + '">' + disciplina.nome + '</option>');
+        disciplinaSelect.innerHTML = '<option value="">Carregando...</option>';
+        tabelaBody.innerHTML = '';
+
+        fetch(`/notas/disciplinas/${cursoId}`)
+            .then(res => res.json())
+            .then(data => {
+                disciplinaSelect.innerHTML = '<option value="">Selecione uma disciplina</option>';
+                data.forEach(d => {
+                    disciplinaSelect.innerHTML += `<option value="${d.id}">${d.nome}</option>`;
                 });
             });
+    });
 
-            // Carregar Alunos
-            $.get('/notas/alunos/' + cursoId, function(alunos) {
-                let container = $('#alunos-container');
-                container.empty();
+    document.getElementById('disciplina').addEventListener('change', function () {
+        const cursoId = document.getElementById('curso').value;
+        const disciplinaId = this.value;
+        const tabelaBody = document.querySelector('#tabela-notas tbody');
 
-                if (alunos.length === 0) {
-                    container.append('<p>Nenhum aluno matriculado neste curso.</p>');
-                } else {
-                    $.each(alunos, function(index, aluno) {
-                        container.append(`
-                            <div class="form-group">
-                                <label>${aluno.nome}</label>
-                                <input type="number" name="notas[${aluno.id}]" min="0" max="10" step="0.1" class="form-control">
-                            </div>
-                        `);
-                    });
-                }
+        tabelaBody.innerHTML = '<tr><td colspan="2">Carregando alunos...</td></tr>';
+
+        fetch(`/notas/alunos/${cursoId}`)
+            .then(res => res.json())
+            .then(data => {
+                tabelaBody.innerHTML = '';
+                data.forEach(aluno => {
+                    tabelaBody.innerHTML += `
+                        <tr>
+                            <td>${aluno.nome}</td>
+                            <td>
+                                <input type="hidden" name="notas[${aluno.id}][aluno_id]" value="${aluno.id}">
+                                <input type="number" name="notas[${aluno.id}][valor]" step="0.01" min="0" max="10" class="form-control" required>
+                            </td>
+                        </tr>
+                    `;
+                });
             });
-        } else {
-            $('#disciplina').empty().append('<option value="">Selecione um curso primeiro</option>');
-            $('#alunos-container').empty();
-        }
     });
 </script>
 @stop

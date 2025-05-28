@@ -23,7 +23,8 @@ class Aluno extends Model
     }
     public function cursos()
     {
-        return $this->belongsToMany(Curso::class, 'aluno_curso');
+        return $this->belongsToMany(Curso::class, 'aluno_curso')
+                    ->withPivot('id');
     }
     public function disciplinas()
     {

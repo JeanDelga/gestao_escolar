@@ -22,19 +22,20 @@ class NotaController extends Controller
     }
 
     public function store(Request $request)
-    {
-        $disciplinaId = $request->disciplina;
+{
+    $disciplinaId = $request->disciplina;
 
-        foreach($request->notas as $alunoId => $notaValor) {
-            Nota::create([
-                'aluno_id' => $alunoId,
-                'disciplina_id' => $disciplinaId,
-                'valor' => $notaValor
-            ]);
-        }
-
-        return redirect()->route('notas.index')->with('success', 'Notas lançadas com sucesso!');
+    foreach($request->notas as $alunoId => $notaValor) {
+        Nota::create([
+            'aluno_id' => $alunoId,
+            'disciplina_id' => $disciplinaId,
+            'valor' => $notaValor['valor'],
+        ]);
     }
+
+    return redirect()->route('notas.index')->with('success', 'Notas lançadas com sucesso!');
+}
+
 
     public function getDisciplinas($cursoId)
     {
