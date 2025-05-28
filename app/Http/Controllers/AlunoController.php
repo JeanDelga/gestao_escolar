@@ -9,14 +9,11 @@ use Yajra\DataTables\Facades\DataTables;
 
 class AlunoController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Request $request)
     {
         if ($request->ajax()) {
             return DataTables::of(Aluno::latest()->get())
-                ->addColumn('action', function($row) {
+                ->addColumn('action', function ($row) {
                     return '
                         <a href="' . route("alunos.edit", $row->id) . '" class="btn btn-outline-info btn-sm"><i class="fas fa-pen"></i></a>
                         <form action="' . route("alunos.destroy", $row->id) . '" method="POST" style="display:inline" onsubmit="return confirm(\'Deseja realmente excluir este registro?\')">
@@ -31,18 +28,12 @@ class AlunoController extends Controller
         return view('alunos.index');
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         $action = 'Cadastrar';
         return view('alunos.crud', compact('action'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         $request->validate([
@@ -64,9 +55,6 @@ class AlunoController extends Controller
         return redirect()->route('alunos.index')->with('success', 'Aluno cadastrado com sucesso!');
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit($id)
     {
         $edit = Aluno::findOrFail($id);
@@ -75,9 +63,6 @@ class AlunoController extends Controller
         return view('alunos.crud', compact('edit', 'action'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, $id)
     {
         $request->validate([
@@ -98,9 +83,6 @@ class AlunoController extends Controller
         return redirect()->route('alunos.index')->with('success', 'Aluno atualizado com sucesso!');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy($id)
     {
         $aluno = Aluno::findOrFail($id);
